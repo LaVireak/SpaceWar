@@ -90,6 +90,8 @@ public class Scene1 extends JPanel {
     private int lastRowToShow;
     private int firstRowToShow;
 
+    private int score = 0; // Add this field
+
     public Scene1(Game game) {
         this.game = game;
         // initBoard();
@@ -327,8 +329,8 @@ public class Scene1 extends JPanel {
         g.setColor(Color.black);
         g.fillRect(0, 0, d.width, d.height);
 
-        g.setColor(Color.white);
-        g.drawString("FRAME: " + frame, 10, 10);
+        // Draw dashboard (now includes FRAME)
+        drawDashboard(g);
 
         g.setColor(Color.green);
 
@@ -351,6 +353,40 @@ public class Scene1 extends JPanel {
         }
 
         Toolkit.getDefaultToolkit().sync();
+    }
+
+    private void drawDashboard(Graphics g) {
+        int marginTop = 10; // Add margin from the top
+
+        // Draw drop shadow
+        g.setColor(new Color(0, 0, 0, 100));
+        g.fillRoundRect(6, marginTop + 6, BOARD_WIDTH - 12, 48, 20, 20);
+
+        // Draw gradient background
+        java.awt.Graphics2D g2d = (java.awt.Graphics2D) g;
+        java.awt.GradientPaint gp = new java.awt.GradientPaint(
+            0, marginTop, new Color(40, 40, 40, 230),
+            0, marginTop + 50, new Color(80, 80, 80, 200)
+        );
+        g2d.setPaint(gp);
+        g2d.fillRoundRect(0, marginTop, BOARD_WIDTH, 44, 20, 20);
+
+        // Draw border
+        g2d.setColor(new Color(200, 200, 200, 180));
+        g2d.setStroke(new java.awt.BasicStroke(2f));
+        g2d.drawRoundRect(0, marginTop, BOARD_WIDTH - 1, 44, 20, 20);
+
+        // Draw text
+        g.setColor(Color.white);
+        g.setFont(g.getFont().deriveFont(Font.BOLD, 20f));
+        g.drawString("Score: " + score, 30, marginTop + 30);
+
+        String speedStatus = player.isSpeedUp() ? "Speedup" : "Normal speed";
+        g.drawString("Speed: " + speedStatus, 250, marginTop + 30);
+
+        // Draw FRAME inside dashboard
+        g.setFont(g.getFont().deriveFont(Font.PLAIN, 14f));
+        g.drawString("FRAME: " + frame, 30, marginTop + 15);
     }
 
     private void gameOver(Graphics g) {
@@ -451,6 +487,7 @@ public class Scene1 extends JPanel {
                         enemy.setDying(true);
                         explosions.add(new Explosion(enemyX, enemyY));
                         deaths++;
+                        score++; // Increment score when enemy is killed
                         shot.die();
                         shotsToRemove.add(shot);
                     }

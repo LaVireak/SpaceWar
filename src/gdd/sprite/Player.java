@@ -43,6 +43,10 @@ public class Player extends Sprite {
         return currentSpeed;
     }
 
+    public boolean isSpeedUp() {
+        return currentSpeed > 2;
+    }
+
     public void act() {
         x += dx;
 

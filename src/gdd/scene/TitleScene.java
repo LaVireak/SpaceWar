@@ -27,8 +27,8 @@ public class TitleScene extends JPanel {
 
     public TitleScene(Game game) {
         this.game = game;
-        // initBoard();
-        // initTitle();
+        initBoard();
+        initTitle();
     }
 
     private void initBoard() {
@@ -103,13 +103,14 @@ public class TitleScene extends JPanel {
         String text = "Press SPACE to Start";
         int stringWidth = g.getFontMetrics().stringWidth(text);
         int x = (d.width - stringWidth) / 2;
-        // int stringHeight = g.getFontMetrics().getAscent();
-        // int y = (d.height + stringHeight) / 2;
+        int stringHeight = g.getFontMetrics().getAscent();
+        int y = (d.height + stringHeight) / 2;
         g.drawString(text, x, 600);
 
         g.setColor(Color.gray);
         g.setFont(g.getFont().deriveFont(10f));
-        g.drawString("Game by Chayapol", 10, 650);
+        g.drawString("Vireak La (6540235) (541)", 10, 640);
+        g.drawString("Lamin Oo (6540039) (541)", 10, 655); 
 
         Toolkit.getDefaultToolkit().sync();
     }

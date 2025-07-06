@@ -144,8 +144,8 @@ public class TitleScene extends JPanel {
             System.out.println("Title.keyPressed: " + e.getKeyCode());
             int key = e.getKeyCode();
             if (key == KeyEvent.VK_SPACE) {
-                // Load the next scene
-                game.loadScene2();
+                // Load Scene1 first
+                game.loadScene1();
             }
 
         }

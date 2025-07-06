@@ -439,7 +439,14 @@ public class Scene1 extends JPanel {
         if (frame >= 3600) {
             inGame = false;
             timer.stop();
-            message = "You win Scene 1!";
+            message = "Scene 1 Complete! Loading Scene 2...";
+            
+            // Add a small delay before transitioning to Scene2
+            javax.swing.Timer transitionTimer = new javax.swing.Timer(2000, e -> {
+                game.loadScene2();
+            });
+            transitionTimer.setRepeats(false);
+            transitionTimer.start();
             return;
         }
 
@@ -472,7 +479,15 @@ public class Scene1 extends JPanel {
         if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
             inGame = false;
             timer.stop();
-            message = "Game won!";
+            message = "Scene 1 Complete! Loading Scene 2...";
+            
+            // Add a small delay before transitioning to Scene2
+            javax.swing.Timer transitionTimer = new javax.swing.Timer(2000, e -> {
+                game.loadScene2();
+            });
+            transitionTimer.setRepeats(false);
+            transitionTimer.start();
+            return;
         }
 
         // player

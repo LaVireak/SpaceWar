@@ -2,6 +2,7 @@ package gdd.sprite;
 
 import static gdd.Global.*;
 import javax.swing.ImageIcon;
+import java.awt.Rectangle;
 
 public class Enemy extends Sprite {
 
@@ -31,6 +32,10 @@ public class Enemy extends Sprite {
     public void act(int direction) {
 
         this.x += direction;
+    }
+
+    public Rectangle getHitBox() {
+        return new Rectangle(x, y, getImage().getWidth(null), getImage().getHeight(null));
     }
 /* 
     public Bomb getBomb() {

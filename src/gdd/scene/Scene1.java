@@ -269,15 +269,39 @@ public class Scene1 extends JPanel {
     private void drawPlayer(Graphics g) {
 
         if (player.isVisible()) {
-
             g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+            drawPlayerHealthBar(g); // Draw health bar above player
         }
 
         if (player.isDying()) {
-
             player.die();
             inGame = false;
         }
+    }
+
+    // Add this method to draw the health bar
+    private void drawPlayerHealthBar(Graphics g) {
+        int barWidth = 60;
+        int barHeight = 8;
+        int x = player.getX() + player.getImage().getWidth(null) / 2 - barWidth / 2;
+        int y = player.getY() - 16;
+
+        // Background
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(x, y, barWidth, barHeight);
+
+        // Health
+        int health = player.getHealth();
+        int maxHealth = 5;
+        int healthWidth = (int) ((barWidth - 2) * (health / (double) maxHealth));
+        g.setColor(Color.GREEN);
+        if (health <= 2) g.setColor(Color.RED);
+        else if (health <= 3) g.setColor(Color.ORANGE);
+        g.fillRect(x + 1, y + 1, healthWidth, barHeight - 2);
+
+        // Border
+        g.setColor(Color.WHITE);
+        g.drawRect(x, y, barWidth, barHeight);
     }
 
     private void drawShot(Graphics g) {
@@ -461,6 +485,35 @@ public class Scene1 extends JPanel {
         for (Enemy enemy : enemies) {
             if (enemy.isVisible()) {
                 enemy.act(direction);
+
+                // --- Add this block for player-enemy collision ---
+                // Only check if player is alive and visible
+                if (player.isVisible() && !player.isDying()) {
+                    // Use bounding box collision
+                    int enemyX = enemy.getX();
+                    int enemyY = enemy.getY();
+                    int enemyW = enemy.getImage().getWidth(null);
+                    int enemyH = enemy.getImage().getHeight(null);
+
+                    int playerX = player.getX();
+                    int playerY = player.getY();
+                    int playerW = player.getImage().getWidth(null);
+                    int playerH = player.getImage().getHeight(null);
+
+                    boolean collision = playerX < enemyX + enemyW &&
+                                        playerX + playerW > enemyX &&
+                                        playerY < enemyY + enemyH &&
+                                        playerY + playerH > enemyY;
+
+                    if (collision) {
+                        player.takeDamage(1);
+                        // Optionally, kill the enemy on collision
+                        enemy.setDying(true);
+                        // Optionally, add an explosion effect
+                        explosions.add(new Explosion(enemyX, enemyY));
+                    }
+                }
+                // --- End of added block ---
             }
         }
 

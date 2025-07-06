@@ -11,6 +11,7 @@ public class Player extends Sprite {
     private static final int START_Y = 540;
     private int width;
     private int currentSpeed = 2;
+    private int health = 5; // Add health field
 
     private Rectangle bounds = new Rectangle(175,135,17,32);
 
@@ -80,6 +81,22 @@ public class Player extends Sprite {
 
         if (key == KeyEvent.VK_RIGHT) {
             dx = 0;
+        }
+    }
+
+    // Add getter and setter for health
+    public int getHealth() {
+        return health;
+    }
+
+    public void setHealth(int health) {
+        this.health = Math.max(0, health);
+    }
+
+    public void takeDamage(int amount) {
+        setHealth(health - amount);
+        if (health <= 0) {
+            setDying(true);
         }
     }
 }

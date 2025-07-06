@@ -435,6 +435,13 @@ public class Scene1 extends JPanel {
 
     private void update() {
 
+        // Win if played for 1 minute (3600 frames at 60 FPS)
+        if (frame >= 3600) {
+            inGame = false;
+            timer.stop();
+            message = "You win Scene 1!";
+            return;
+        }
 
         // Check enemy spawn
         // TODO this approach can only spawn one enemy at a frame

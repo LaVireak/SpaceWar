@@ -170,6 +170,7 @@ public class Scene1 extends JPanel {
         // }
         player = new Player();
         // shot = new Shot();
+        
     }
 
     private void drawMap(Graphics g) {

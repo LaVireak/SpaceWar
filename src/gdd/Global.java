@@ -26,13 +26,13 @@ public class Global {
     public static final int CHANCE = 5;
     public static final int DELAY = 17;
     public static final int PLAYER_WIDTH = 30; // Doubled from 15
-    public static final int PLAYER_HEIGHT = 20; // Doubled from 10
+    public static final int PLAYER_HEIGHT = 30; // Doubled from 10 
 
     // Images
     public static final String IMG_ENEMY = "src/images/alien.png";
-    public static final String IMG_PLAYER = "src/images/player.png";
+    public static final String IMG_PLAYER = "src/images/Player/Idle.png";
     public static final String IMG_SHOT = "src/images/shot.png";
     public static final String IMG_EXPLOSION = "src/images/explosion.png";
     public static final String IMG_TITLE = "src/images/title.png";
-    public static final String IMG_POWERUP_SPEEDUP = "src/images/powerup-s.png";
+    public static final String IMG_POWERUP_SPEEDUP = "src/images/ability/Speedup_spell.png";
 }

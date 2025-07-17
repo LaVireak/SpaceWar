@@ -3,53 +3,48 @@ package gdd.sprite;
 import static gdd.Global.*;
 import javax.swing.ImageIcon;
 
-public class Alien1 extends Enemy {
-
-    private Bomb bomb;
-    private int health = 10;
+public class Alien2 extends Enemy {
+    
+    private int health = 15;
     private String movementPattern = "Straight";
-    private String attackPattern = "SingleShot";
+    private String attackPattern = "SpreadShot";
     private int frameCounter = 0;
     private double angle = 0; // For sine wave movement
     private int originalX; // Store original X for sine wave
     private boolean diveBombTriggered = false;
-
-    public Alien1(int x, int y) {
+    
+    public Alien2(int x, int y) {
         super(x, y);
         this.originalX = x;
-        initEnemy(x, y);
+        initAlien2();
     }
     
-    public Alien1(int x, int y, String movementPattern, String attackPattern) {
+    public Alien2(int x, int y, String movementPattern, String attackPattern) {
         super(x, y);
         this.originalX = x;
         this.movementPattern = movementPattern;
         this.attackPattern = attackPattern;
-        initEnemy(x, y);
+        initAlien2();
     }
-
-    private void initEnemy(int x, int y) {
-
-        this.x = x;
-        this.y = y;
-
-        bomb = new Bomb(x, y);
-
-        var ii = new ImageIcon(IMG_ENEMY);
-
+    
+    private void initAlien2() {
+        // Use a different sprite for Alien2 - we'll use the explosion sprite for now
+        // In a real game, you'd have a different alien sprite
+        var ii = new ImageIcon("src/images/alien.png"); // Using same sprite but different behavior
+        
         // Scale the image to use the global scaling factor
         var scaledImage = ii.getImage().getScaledInstance(ii.getIconWidth() * SCALE_FACTOR,
                 ii.getIconHeight() * SCALE_FACTOR,
                 java.awt.Image.SCALE_SMOOTH);
         setImage(scaledImage);
     }
-
+    
     @Override
     public void act(int direction) {
         frameCounter++;
         
         // Move downward
-        y += 1;
+        y += 2;
         
         // Apply movement pattern
         switch (movementPattern) {
@@ -60,7 +55,7 @@ public class Alien1 extends Enemy {
             case "SineWave":
                 // Sine wave movement
                 angle += 0.1;
-                x = originalX + (int)(Math.sin(angle) * 30);
+                x = originalX + (int)(Math.sin(angle) * 50);
                 break;
                 
             case "DiveBomb":
@@ -69,7 +64,7 @@ public class Alien1 extends Enemy {
                     diveBombTriggered = true;
                 }
                 if (diveBombTriggered) {
-                    y += 3; // Extra speed when dive bombing
+                    y += 4; // Extra speed when dive bombing
                 }
                 break;
         }
@@ -109,41 +104,5 @@ public class Alien1 extends Enemy {
     public String getAttackPattern() {
         return attackPattern;
     }
-
-    public Bomb getBomb() {
-
-        return bomb;
-    }
-
-    public class Bomb extends Sprite {
-
-        private boolean destroyed;
-
-        public Bomb(int x, int y) {
-
-            initBomb(x, y);
-        }
-
-        private void initBomb(int x, int y) {
-
-            setDestroyed(true);
-
-            this.x = x;
-            this.y = y;
-
-            var bombImg = "src/images/bomb.png";
-            var ii = new ImageIcon(bombImg);
-            setImage(ii.getImage());
-        }
-
-        public void setDestroyed(boolean destroyed) {
-
-            this.destroyed = destroyed;
-        }
-
-        public boolean isDestroyed() {
-
-            return destroyed;
-        }
-    }
 }
+

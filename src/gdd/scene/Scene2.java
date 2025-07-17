@@ -7,6 +7,8 @@ import gdd.SpawnDetails;
 import gdd.powerup.PowerUp;
 import gdd.powerup.SpeedUp;
 import gdd.sprite.Alien1;
+import gdd.sprite.Alien2;
+import gdd.sprite.Boss;
 import gdd.sprite.Enemy;
 import gdd.sprite.Explosion;
 import gdd.sprite.Player;
@@ -23,8 +25,8 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -35,7 +37,11 @@ public class Scene2 extends JPanel {
     private List<Enemy> enemies;
     private List<Explosion> explosions;
     private List<Shot> shots;
+    private List<Shot> bossShots; // Boss projectiles
     private Player player;
+    private Boss boss;
+    private boolean bossSpawned = false;
+    private boolean bossDefeated = false;
 
     private int direction = -1;
     private int deaths = 0;
@@ -55,10 +61,23 @@ public class Scene2 extends JPanel {
     }
 
     private void loadSpawnDetails() {
-        // TODO: Add spawn details for Scene2
+        try {
+            Map<Integer, SpawnDetails> loadedMap = gdd.CSVLoader.loadSpawnDetailsFromCSV("src/data/scene2_spawns.csv");
+            spawnMap = new HashMap<>(loadedMap);
+            System.out.println("Loaded " + spawnMap.size() + " spawn details for Scene2 from CSV");
+        } catch (Exception e) {
+            System.err.println("Error loading Scene2 spawn details from CSV: " + e.getMessage());
+            // Fallback to hardcoded spawn details
+            loadHardcodedSpawnDetails();
+        }
+    }
+    
+    private void loadHardcodedSpawnDetails() {
+        // Fallback spawn details if CSV loading fails
         spawnMap.put(50, new SpawnDetails("PowerUp-SpeedUp", 100, 0));
         spawnMap.put(200, new SpawnDetails("Alien1", 200, 0));
-        // Add more as needed
+        spawnMap.put(300, new SpawnDetails("Alien2", 300, 0));
+        spawnMap.put(3000, new SpawnDetails("Boss", 300, 50));
     }
 
     private void initAudio() {
@@ -100,7 +119,11 @@ public class Scene2 extends JPanel {
         powerups = new ArrayList<>();
         explosions = new ArrayList<>();
         shots = new ArrayList<>();
+        bossShots = new ArrayList<>();
         player = new Player();
+        boss = null;
+        bossSpawned = false;
+        bossDefeated = false;
     }
 
     @Override
@@ -118,9 +141,11 @@ public class Scene2 extends JPanel {
         if (inGame) {
             // Draw game elements
             drawEnemies(g);
+            drawBoss(g);
             drawPowerUps(g);
             drawPlayer(g);
             drawShots(g);
+            drawBossShots(g);
             drawExplosions(g);
         } else {
             if (timer.isRunning()) {
@@ -133,10 +158,76 @@ public class Scene2 extends JPanel {
     }
 
     private void drawDashboard(Graphics g) {
+        int marginTop = 10;
+
+        // Draw drop shadow
+        g.setColor(new Color(0, 0, 0, 100));
+        g.fillRoundRect(6, marginTop + 6, BOARD_WIDTH - 12, 68, 20, 20);
+
+        // Draw gradient background
+        java.awt.Graphics2D g2d = (java.awt.Graphics2D) g;
+        java.awt.GradientPaint gp = new java.awt.GradientPaint(
+            0, marginTop, new Color(40, 40, 40, 230),
+            0, marginTop + 70, new Color(80, 80, 80, 200)
+        );
+        g2d.setPaint(gp);
+        g2d.fillRoundRect(0, marginTop, BOARD_WIDTH, 64, 20, 20);
+
+        // Draw border
+        g2d.setColor(new Color(200, 200, 200, 180));
+        g2d.setStroke(new java.awt.BasicStroke(2f));
+        g2d.drawRoundRect(0, marginTop, BOARD_WIDTH - 1, 64, 20, 20);
+
+        // Draw text
         g.setColor(Color.white);
         g.setFont(g.getFont().deriveFont(Font.BOLD, 20f));
-        g.drawString("Score: " + score, 30, 30);
-        // Add more dashboard info as needed
+        g.drawString("Score: " + score, 30, marginTop + 30);
+
+        // Speed status
+        String speedStatus = "Speed: " + player.getSpeedLevel() + "/4";
+        g.drawString(speedStatus, 250, marginTop + 30);
+
+        // Multi-shot status
+        String shotStatus = "Shots: " + player.getMultiShotLevel() + "/4";
+        g.drawString(shotStatus, 450, marginTop + 30);
+
+        // Draw boss health bar if boss is active
+        if (bossSpawned && boss != null && boss.isVisible()) {
+            g.setFont(g.getFont().deriveFont(Font.BOLD, 16f));
+            g.drawString("BOSS HEALTH:", 30, marginTop + 55);
+            
+            // Boss health bar
+            int barWidth = 200;
+            int barHeight = 12;
+            int barX = 150;
+            int barY = marginTop + 45;
+            
+            // Background
+            g.setColor(Color.DARK_GRAY);
+            g.fillRect(barX, barY, barWidth, barHeight);
+            
+            // Health
+            double healthPercent = (double)boss.getHealth() / boss.getMaxHealth();
+            int healthWidth = (int)(barWidth * healthPercent);
+            
+            if (healthPercent > 0.6) g.setColor(Color.GREEN);
+            else if (healthPercent > 0.3) g.setColor(Color.ORANGE);
+            else g.setColor(Color.RED);
+            
+            g.fillRect(barX, barY, healthWidth, barHeight);
+            
+            // Border
+            g.setColor(Color.WHITE);
+            g.drawRect(barX, barY, barWidth, barHeight);
+            
+            // Phase indicator
+            g.setFont(g.getFont().deriveFont(Font.BOLD, 14f));
+            g.drawString("Phase " + boss.getPhase(), barX + barWidth + 10, barY + 10);
+        }
+
+        // Draw FRAME inside dashboard
+        g.setFont(g.getFont().deriveFont(Font.PLAIN, 14f));
+        g.drawString("FRAME: " + frame, 30, marginTop + 15);
     }
 
     private void gameOver(Graphics g) {
@@ -164,6 +255,12 @@ public class Scene2 extends JPanel {
             }
         }
     }
+    
+    private void drawBoss(Graphics g) {
+        if (boss != null && boss.isVisible()) {
+            g.drawImage(boss.getImage(), boss.getX(), boss.getY(), this);
+        }
+    }
 
     private void drawPowerUps(Graphics g) {
         for (PowerUp powerUp : powerups) {
@@ -176,7 +273,37 @@ public class Scene2 extends JPanel {
     private void drawPlayer(Graphics g) {
         if (player.isVisible()) {
             g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+            drawPlayerHealthBar(g);
         }
+        
+        if (player.isDying()) {
+            player.die();
+            inGame = false;
+        }
+    }
+    
+    private void drawPlayerHealthBar(Graphics g) {
+        int barWidth = 60;
+        int barHeight = 8;
+        int x = player.getX() + player.getImage().getWidth(null) / 2 - barWidth / 2;
+        int y = player.getY() - 16;
+
+        // Background
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(x, y, barWidth, barHeight);
+
+        // Health
+        int health = player.getHealth();
+        int maxHealth = 5;
+        int healthWidth = (int) ((barWidth - 2) * (health / (double) maxHealth));
+        g.setColor(Color.GREEN);
+        if (health <= 2) g.setColor(Color.RED);
+        else if (health <= 3) g.setColor(Color.ORANGE);
+        g.fillRect(x + 1, y + 1, healthWidth, barHeight - 2);
+
+        // Border
+        g.setColor(Color.WHITE);
+        g.drawRect(x, y, barWidth, barHeight);
     }
 
     private void drawShots(Graphics g) {
@@ -186,42 +313,173 @@ public class Scene2 extends JPanel {
             }
         }
     }
-
-    private void drawExplosions(Graphics g) {
-        for (Explosion explosion : explosions) {
-            if (explosion.isVisible()) {
-                g.drawImage(explosion.getImage(), explosion.getX(), explosion.getY(), this);
-                explosion.visibleCountDown();
+    
+    private void drawBossShots(Graphics g) {
+        for (Shot shot : bossShots) {
+            if (shot.isVisible()) {
+                g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
             }
         }
     }
 
+    private void drawExplosions(Graphics g) {
+        List<Explosion> toRemove = new ArrayList<>();
+        for (Explosion explosion : explosions) {
+            if (explosion.isVisible()) {
+                g.drawImage(explosion.getImage(), explosion.getX(), explosion.getY(), this);
+                explosion.visibleCountDown();
+                if (!explosion.isVisible()) {
+                    toRemove.add(explosion);
+                }
+            }
+        }
+        explosions.removeAll(toRemove);
+    }
+
     private void update() {
-        // Implement Scene2 specific update logic
-        // Similar to Scene1 but with Scene2 specific behavior
+        // Check for victory condition
+        if (bossDefeated) {
+            inGame = false;
+            message = "Victory! You defeated the boss!";
+            return;
+        }
 
         // Player movement
         player.act();
 
+        // Handle spawning based on spawnMap
+        SpawnDetails sd = spawnMap.get(frame);
+        if (sd != null) {
+            switch (sd.type) {
+                case "Alien1":
+                    Enemy enemy = new Alien1(sd.x, sd.y, sd.getMovementPattern(), sd.getAttackPattern());
+                    enemies.add(enemy);
+                    break;
+                case "Alien2":
+                    Enemy enemy2 = new Alien2(sd.x, sd.y, sd.getMovementPattern(), sd.getAttackPattern());
+                    enemies.add(enemy2);
+                    break;
+                case "Boss":
+                    if (!bossSpawned) {
+                        boss = new Boss(sd.x, sd.y);
+                        bossSpawned = true;
+                        System.out.println("Boss spawned!");
+                    }
+                    break;
+                case "PowerUp-SpeedUp":
+                    powerups.add(new SpeedUp(sd.x, sd.y));
+                    break;
+                case "PowerUp-MultiShot":
+                    powerups.add(new gdd.powerup.MultiShot(sd.x, sd.y));
+                    break;
+            }
+        }
+
+        // Update enemies
+        List<Enemy> enemiesToRemove = new ArrayList<>();
+        for (Enemy enemy : enemies) {
+            if (enemy.isVisible()) {
+                enemy.act(1);
+                
+                // Check collision with player
+                if (player.isVisible() && !player.isDying() && enemy.collidesWith(player)) {
+                    player.takeDamage(1);
+                    enemy.setDying(true);
+                    explosions.add(new Explosion(enemy.getX(), enemy.getY()));
+                }
+                
+                // Remove if off screen
+                if (enemy.getY() > BOARD_HEIGHT + 50) {
+                    enemy.die();
+                }
+            }
+            
+            if (enemy.isDying() || !enemy.isVisible()) {
+                enemiesToRemove.add(enemy);
+            }
+        }
+        enemies.removeAll(enemiesToRemove);
+
+        // Update boss
+        if (boss != null && boss.isVisible()) {
+            boss.act(1);
+            
+            // Check collision with player
+            if (player.isVisible() && !player.isDying() && boss.collidesWith(player)) {
+                player.takeDamage(2); // Boss does more damage
+                explosions.add(new Explosion(player.getX(), player.getY()));
+            }
+            
+            // Update boss shots
+            bossShots.addAll(boss.getBossShots());
+            boss.clearBossShots();
+        }
+        
+        if (boss != null && boss.isDying()) {
+            bossDefeated = true;
+            explosions.add(new Explosion(boss.getX(), boss.getY()));
+            score += 100; // Big score bonus for defeating boss
+        }
+
         // Update shots
+        List<Shot> shotsToRemove = new ArrayList<>();
         for (Shot shot : shots) {
             if (shot.isVisible()) {
                 shot.setY(shot.getY() - 20);
+                
+                // Check collision with enemies
+                for (Enemy enemy : enemies) {
+                    if (enemy.isVisible() && shot.collidesWith(enemy)) {
+                        enemy.setDying(true);
+                        shot.die();
+                        explosions.add(new Explosion(enemy.getX(), enemy.getY()));
+                        score++;
+                        break;
+                    }
+                }
+                
+                // Check collision with boss
+                if (boss != null && boss.isVisible() && shot.collidesWith(boss)) {
+                    boss.takeDamage(1);
+                    shot.die();
+                    explosions.add(new Explosion(shot.getX(), shot.getY()));
+                    score++;
+                }
+                
                 if (shot.getY() < 0) {
                     shot.die();
                 }
             }
-        }
-
-        // Remove dead shots
-        shots.removeIf(shot -> !shot.isVisible());
-
-        // Update enemies
-        for (Enemy enemy : enemies) {
-            if (enemy.isVisible()) {
-                enemy.act(1); // Move enemies
+            
+            if (!shot.isVisible()) {
+                shotsToRemove.add(shot);
             }
         }
+        shots.removeAll(shotsToRemove);
+        
+        // Update boss shots
+        List<Shot> bossShotsToRemove = new ArrayList<>();
+        for (Shot bossShot : bossShots) {
+            if (bossShot.isVisible()) {
+                bossShot.setY(bossShot.getY() + 8);
+                
+                // Check collision with player
+                if (player.isVisible() && !player.isDying() && bossShot.collidesWith(player)) {
+                    player.takeDamage(1);
+                    bossShot.die();
+                    explosions.add(new Explosion(player.getX(), player.getY()));
+                }
+                
+                if (bossShot.getY() > BOARD_HEIGHT + 50) {
+                    bossShot.die();
+                }
+            }
+            
+            if (!bossShot.isVisible()) {
+                bossShotsToRemove.add(bossShot);
+            }
+        }
+        bossShots.removeAll(bossShotsToRemove);
 
         // Update power-ups
         for (PowerUp powerUp : powerups) {
@@ -230,19 +488,6 @@ public class Scene2 extends JPanel {
                 if (powerUp.collidesWith(player)) {
                     powerUp.upgrade(player);
                 }
-            }
-        }
-
-        // Handle spawning based on spawnMap
-        SpawnDetails sd = spawnMap.get(frame);
-        if (sd != null) {
-            switch (sd.type) {
-                case "Alien1":
-                    enemies.add(new Alien1(sd.x, sd.y));
-                    break;
-                case "PowerUp-SpeedUp":
-                    powerups.add(new SpeedUp(sd.x, sd.y));
-                    break;
             }
         }
     }
@@ -273,9 +518,37 @@ public class Scene2 extends JPanel {
             int y = player.getY();
             int key = e.getKeyCode();
             if (key == KeyEvent.VK_SPACE && inGame) {
-                if (shots.size() < 4) {
-                    Shot shot = new Shot(x, y);
-                    shots.add(shot);
+                if (shots.size() < 8) { // Increased limit for multi-shot
+                    int playerCenterX = player.getX() + player.getImage().getWidth(null) / 2;
+                    int playerY = player.getY();
+                    
+                    // Create shots based on multi-shot level
+                    int multiShotLevel = player.getMultiShotLevel();
+                    
+                    switch (multiShotLevel) {
+                        case 1:
+                            // Single shot
+                            shots.add(new Shot(playerCenterX, playerY));
+                            break;
+                        case 2:
+                            // Double shot
+                            shots.add(new Shot(playerCenterX - 10, playerY));
+                            shots.add(new Shot(playerCenterX + 10, playerY));
+                            break;
+                        case 3:
+                            // Triple shot
+                            shots.add(new Shot(playerCenterX - 15, playerY));
+                            shots.add(new Shot(playerCenterX, playerY));
+                            shots.add(new Shot(playerCenterX + 15, playerY));
+                            break;
+                        case 4:
+                            // Quad shot
+                            shots.add(new Shot(playerCenterX - 20, playerY));
+                            shots.add(new Shot(playerCenterX - 7, playerY));
+                            shots.add(new Shot(playerCenterX + 7, playerY));
+                            shots.add(new Shot(playerCenterX + 20, playerY));
+                            break;
+                    }
                 }
             }
         }

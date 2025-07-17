@@ -1,8 +1,8 @@
 package gdd.sprite;
 
 import static gdd.Global.*;
-import javax.swing.ImageIcon;
 import java.awt.Rectangle;
+import javax.swing.ImageIcon;
 
 public class Enemy extends Sprite {
 
@@ -29,9 +29,14 @@ public class Enemy extends Sprite {
         setImage(scaledImage);
     }
 
-    public void act(int direction) {
-
+     public void act(int direction) {
         this.x += direction;
+    }
+    
+    @Override
+    public void act() {
+        // Default implementation - can be overridden by subclasses
+        act(1);
     }
 
     public Rectangle getHitBox() {

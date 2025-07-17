@@ -23,6 +23,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -110,7 +111,19 @@ public class Scene1 extends JPanel {
     }
 
     private void loadSpawnDetails() {
-        // TODO load this from a file
+        try {
+            Map<Integer, SpawnDetails> loadedMap = gdd.CSVLoader.loadSpawnDetailsFromCSV("src/data/scene1_spawns.csv");
+            spawnMap = new HashMap<>(loadedMap);
+            System.out.println("Loaded " + spawnMap.size() + " spawn details from CSV");
+        } catch (Exception e) {
+            System.err.println("Error loading spawn details from CSV: " + e.getMessage());
+            // Fallback to hardcoded spawn details
+            loadHardcodedSpawnDetails();
+        }
+    }
+    
+    private void loadHardcodedSpawnDetails() {
+        // Fallback spawn details if CSV loading fails
         spawnMap.put(50, new SpawnDetails("PowerUp-SpeedUp", 100, 0));
         spawnMap.put(200, new SpawnDetails("Alien1", 200, 0));
         spawnMap.put(300, new SpawnDetails("Alien1", 300, 0));
@@ -385,29 +398,34 @@ public class Scene1 extends JPanel {
 
         // Draw drop shadow
         g.setColor(new Color(0, 0, 0, 100));
-        g.fillRoundRect(6, marginTop + 6, BOARD_WIDTH - 12, 48, 20, 20);
+        g.fillRoundRect(6, marginTop + 6, BOARD_WIDTH - 12, 68, 20, 20);
 
         // Draw gradient background
         java.awt.Graphics2D g2d = (java.awt.Graphics2D) g;
         java.awt.GradientPaint gp = new java.awt.GradientPaint(
             0, marginTop, new Color(40, 40, 40, 230),
-            0, marginTop + 50, new Color(80, 80, 80, 200)
+            0, marginTop + 70, new Color(80, 80, 80, 200)
         );
         g2d.setPaint(gp);
-        g2d.fillRoundRect(0, marginTop, BOARD_WIDTH, 44, 20, 20);
+        g2d.fillRoundRect(0, marginTop, BOARD_WIDTH, 64, 20, 20);
 
         // Draw border
         g2d.setColor(new Color(200, 200, 200, 180));
         g2d.setStroke(new java.awt.BasicStroke(2f));
-        g2d.drawRoundRect(0, marginTop, BOARD_WIDTH - 1, 44, 20, 20);
+        g2d.drawRoundRect(0, marginTop, BOARD_WIDTH - 1, 64, 20, 20);
 
         // Draw text
         g.setColor(Color.white);
         g.setFont(g.getFont().deriveFont(Font.BOLD, 20f));
         g.drawString("Score: " + score, 30, marginTop + 30);
 
-        String speedStatus = player.isSpeedUp() ? "Speedup" : "Normal speed";
-        g.drawString("Speed: " + speedStatus, 250, marginTop + 30);
+        // Speed status
+        String speedStatus = "Speed: " + player.getSpeedLevel() + "/4";
+        g.drawString(speedStatus, 250, marginTop + 30);
+
+        // Multi-shot status
+        String shotStatus = "Shots: " + player.getMultiShotLevel() + "/4";
+        g.drawString(shotStatus, 450, marginTop + 30);
 
         // Draw FRAME inside dashboard
         g.setFont(g.getFont().deriveFont(Font.PLAIN, 14f));
@@ -451,24 +469,27 @@ public class Scene1 extends JPanel {
         }
 
         // Check enemy spawn
-        // TODO this approach can only spawn one enemy at a frame
         SpawnDetails sd = spawnMap.get(frame);
         if (sd != null) {
             // Create a new enemy based on the spawn details
             switch (sd.type) {
                 case "Alien1":
-                    Enemy enemy = new Alien1(sd.x, sd.y);
+                    Enemy enemy = new Alien1(sd.x, sd.y, sd.getMovementPattern(), sd.getAttackPattern());
                     enemies.add(enemy);
                     break;
-                // Add more cases for different enemy types if needed
                 case "Alien2":
-                    // Enemy enemy2 = new Alien2(sd.x, sd.y);
-                    // enemies.add(enemy2);
+                    Enemy enemy2 = new gdd.sprite.Alien2(sd.x, sd.y, sd.getMovementPattern(), sd.getAttackPattern());
+                    enemies.add(enemy2);
                     break;
                 case "PowerUp-SpeedUp":
                     // Handle speed up item spawn
                     PowerUp speedUp = new SpeedUp(sd.x, sd.y);
                     powerups.add(speedUp);
+                    break;
+                case "PowerUp-MultiShot":
+                    // Handle multi-shot item spawn
+                    PowerUp multiShot = new gdd.powerup.MultiShot(sd.x, sd.y);
+                    powerups.add(multiShot);
                     break;
                 default:
                     System.out.println("Unknown enemy type: " + sd.type);
@@ -685,10 +706,37 @@ public class Scene1 extends JPanel {
 
             if (key == KeyEvent.VK_SPACE && inGame) {
                 System.out.println("Shots: " + shots.size());
-                if (shots.size() < 4) {
-                    // Create a new shot and add it to the list
-                    Shot shot = new Shot(x, y);
-                    shots.add(shot);
+                if (shots.size() < 8) { // Increased limit for multi-shot
+                    int playerCenterX = player.getX() + player.getImage().getWidth(null) / 2;
+                    int playerY = player.getY();
+                    
+                    // Create shots based on multi-shot level
+                    int multiShotLevel = player.getMultiShotLevel();
+                    
+                    switch (multiShotLevel) {
+                        case 1:
+                            // Single shot
+                            shots.add(new Shot(playerCenterX, playerY));
+                            break;
+                        case 2:
+                            // Double shot
+                            shots.add(new Shot(playerCenterX - 10, playerY));
+                            shots.add(new Shot(playerCenterX + 10, playerY));
+                            break;
+                        case 3:
+                            // Triple shot
+                            shots.add(new Shot(playerCenterX - 15, playerY));
+                            shots.add(new Shot(playerCenterX, playerY));
+                            shots.add(new Shot(playerCenterX + 15, playerY));
+                            break;
+                        case 4:
+                            // Quad shot
+                            shots.add(new Shot(playerCenterX - 20, playerY));
+                            shots.add(new Shot(playerCenterX - 7, playerY));
+                            shots.add(new Shot(playerCenterX + 7, playerY));
+                            shots.add(new Shot(playerCenterX + 20, playerY));
+                            break;
+                    }
                 }
             }
 

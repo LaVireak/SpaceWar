@@ -29,4 +29,13 @@ public class Shot extends Sprite {
         setX(x + H_SPACE);
         setY(y - V_SPACE);
     }
+    
+    @Override
+    public void act() {
+        // Shots move upward
+        y -= 20;
+        if (y < 0) {
+            setVisible(false);
+        }
+    }
 }

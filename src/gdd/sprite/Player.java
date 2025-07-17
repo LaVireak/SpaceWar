@@ -12,6 +12,8 @@ public class Player extends Sprite {
     private int width;
     private int currentSpeed = 2;
     private int health = 5; // Add health field
+    private int multiShotLevel = 1; // Multi-shot level (1-4)
+    private int speedLevel = 1; // Speed level (1-4)
 
     private Rectangle bounds = new Rectangle(175,135,17,32);
 
@@ -45,7 +47,25 @@ public class Player extends Sprite {
     }
 
     public boolean isSpeedUp() {
-        return currentSpeed > 2;
+        return speedLevel > 1;
+    }
+    
+    public int getSpeedLevel() {
+        return speedLevel;
+    }
+    
+    public void setSpeedLevel(int level) {
+        this.speedLevel = Math.min(4, Math.max(1, level));
+        // Update actual speed based on level
+        this.currentSpeed = 2 + (speedLevel - 1); // Speed 2, 3, 4, 5
+    }
+    
+    public int getMultiShotLevel() {
+        return multiShotLevel;
+    }
+    
+    public void setMultiShotLevel(int level) {
+        this.multiShotLevel = Math.min(4, Math.max(1, level));
     }
 
     public void act() {

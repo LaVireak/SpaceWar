@@ -26,8 +26,12 @@ public class Explosion extends Sprite {
     }
 
     public void act(int direction) {
-
-        // this.x += direction;
+        // Explosions don't move
+    }
+    
+    @Override
+    public void act() {
+        // Explosions don't move
     }
 
 

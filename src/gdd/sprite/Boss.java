@@ -26,13 +26,9 @@ public class Boss extends Enemy {
     
     private void initBoss() {
         // Use a larger sprite for the boss - we'll scale the alien sprite larger
-        var ii = new ImageIcon(IMG_ENEMY);
+        var ii = new ImageIcon(IMG_BOSS);
         
-        // Scale the boss to be much larger than regular enemies
-        var scaledImage = ii.getImage().getScaledInstance(ii.getIconWidth() * SCALE_FACTOR * 2,
-                ii.getIconHeight() * SCALE_FACTOR * 2,
-                java.awt.Image.SCALE_SMOOTH);
-        setImage(scaledImage);
+        setImage(ii.getImage());    
     }
     
     @Override

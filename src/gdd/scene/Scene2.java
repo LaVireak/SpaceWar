@@ -8,6 +8,7 @@ import gdd.powerup.PowerUp;
 import gdd.powerup.SpeedUp;
 import gdd.sprite.Alien1;
 import gdd.sprite.Alien2;
+import gdd.sprite.Asteroid;
 import gdd.sprite.Boss;
 import gdd.sprite.Enemy;
 import gdd.sprite.Explosion;
@@ -54,6 +55,11 @@ public class Scene2 extends JPanel {
     private HashMap<Integer, SpawnDetails> spawnMap = new HashMap<>();
     private AudioPlayer audioPlayer;
     private int score = 0;
+    private List<Asteroid> asteroids;
+    private static final int BG_ROWS = 40;
+    private static final int BG_COLS = 24;
+    private final int[][] backgroundMap = new int[BG_ROWS][BG_COLS];
+    private int bgOffset = 0;
 
     public Scene2(Game game) {
         this.game = game;
@@ -113,6 +119,17 @@ public class Scene2 extends JPanel {
             System.err.println("Error closing audio player.");
         }
     }
+    private void initBackground() {
+    for (int row = 0; row < BG_ROWS; row++) {
+        for (int col = 0; col < BG_COLS; col++) {
+            int r = randomizer.nextInt(100);
+            if (r < 5) backgroundMap[row][col] = 2; // big star
+            else if (r < 20) backgroundMap[row][col] = 1; // small star
+            else if (r < 22) backgroundMap[row][col] = 3; // nebula
+            else backgroundMap[row][col] = 0; // empty
+        }
+    }
+}
 
     private void gameInit() {
         enemies = new ArrayList<>();
@@ -121,9 +138,11 @@ public class Scene2 extends JPanel {
         shots = new ArrayList<>();
         bossShots = new ArrayList<>();
         player = new Player();
+        asteroids = new ArrayList<>();
         boss = null;
         bossSpawned = false;
         bossDefeated = false;
+        initBackground();
     }
 
     @Override
@@ -131,15 +150,18 @@ public class Scene2 extends JPanel {
         super.paintComponent(g);
         doDrawing(g);
     }
+    
 
     private void doDrawing(Graphics g) {
+        
         g.setColor(Color.black);
         g.fillRect(0, 0, d.width, d.height);
-
+        drawBackground(g);
         drawDashboard(g);
 
         if (inGame) {
             // Draw game elements
+            drawAsteroids(g);
             drawEnemies(g);
             drawBoss(g);
             drawPowerUps(g);
@@ -153,9 +175,39 @@ public class Scene2 extends JPanel {
             }
             gameOver(g);
         }
+        }
+private void drawBackground(Graphics g) {
+    int tileW = BOARD_WIDTH / BG_COLS;
+    int tileH = BOARD_HEIGHT / (BG_ROWS - 8); // -8 to make stars bigger
+
+    for (int row = 0; row < BG_ROWS; row++) {
+        for (int col = 0; col < BG_COLS; col++) {
+            int type = backgroundMap[row][col];
+            int y = ((row * tileH) + bgOffset) % BOARD_HEIGHT;
+            int x = col * tileW;
+
+            switch (type) {
+                case 1: // small star
+                    g.setColor(Color.WHITE);
+                    g.fillRect(x + tileW/2, y + tileH/2, 2, 2);
+                    break;
+                case 2: // big star
+                    g.setColor(Color.YELLOW);
+                    g.fillOval(x + tileW/2 - 2, y + tileH/2 - 2, 5, 5);
+                    break;
+                case 3: // nebula
+                    g.setColor(new Color(100, 100, 255, 60));
+                    g.fillOval(x, y, tileW, tileH);
+                    break;
+                default:
+                    // empty
+            }
+        }
+    }
 
         Toolkit.getDefaultToolkit().sync();
     }
+    
 
     private void drawDashboard(Graphics g) {
         int marginTop = 10;
@@ -321,6 +373,16 @@ public class Scene2 extends JPanel {
             }
         }
     }
+    private void drawAsteroids(Graphics g) {
+        for (Asteroid asteroid : asteroids) {
+            if (asteroid.isVisible()) {
+                g.drawImage(asteroid.getImage(), asteroid.getX(), asteroid.getY(), this);
+            }
+        }
+    }
+
+
+    
 
     private void drawExplosions(Graphics g) {
         List<Explosion> toRemove = new ArrayList<>();
@@ -343,6 +405,28 @@ public class Scene2 extends JPanel {
             message = "Victory! You defeated the boss!";
             return;
         }
+        if (frame % 90 == 0) {
+        int asteroidX = randomizer.nextInt(BOARD_WIDTH - 40) + 20;
+        asteroids.add(new Asteroid(asteroidX, -40));
+    }
+
+    // Update asteroids
+    List<Asteroid> asteroidsToRemove = new ArrayList<>();
+    for (Asteroid asteroid : asteroids) {
+        if (asteroid.isVisible()) {
+            asteroid.act();
+            // Collision with player
+            if (player.isVisible() && !player.isDying() && asteroid.collidesWith(player)) {
+                player.takeDamage(1);
+                asteroid.setVisible(false);
+                explosions.add(new Explosion(asteroid.getX(), asteroid.getY()));
+            }
+        }
+        if (!asteroid.isVisible()) {
+            asteroidsToRemove.add(asteroid);
+        }
+    }
+    asteroids.removeAll(asteroidsToRemove);
 
         // Player movement
         player.act();
@@ -496,6 +580,8 @@ public class Scene2 extends JPanel {
         frame++;
         update();
         repaint();
+        bgOffset += 1; // scroll speed
+        if (bgOffset >= BOARD_HEIGHT) bgOffset = 0;
     }
 
     private class GameCycle implements ActionListener {

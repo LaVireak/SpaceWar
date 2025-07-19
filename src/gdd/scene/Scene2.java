@@ -60,10 +60,12 @@ public class Scene2 extends JPanel {
     private static final int BG_COLS = 24;
     private final int[][] backgroundMap = new int[BG_ROWS][BG_COLS];
     private int bgOffset = 0;
+    private int initialPlayerHealth = 5;
 
-    public Scene2(Game game) {
+    public Scene2(Game game,int initialPlayerHealth) {
         this.game = game;
         loadSpawnDetails();
+        this.initialPlayerHealth = initialPlayerHealth;
     }
 
     private void loadSpawnDetails() {
@@ -138,6 +140,7 @@ public class Scene2 extends JPanel {
         shots = new ArrayList<>();
         bossShots = new ArrayList<>();
         player = new Player();
+        player.setHealth(initialPlayerHealth);
         asteroids = new ArrayList<>();
         boss = null;
         bossSpawned = false;

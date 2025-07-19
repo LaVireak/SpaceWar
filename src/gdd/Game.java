@@ -9,12 +9,10 @@ public class Game extends JFrame  {
 
     TitleScene titleScene;
     Scene1 scene1;
-    Scene2 scene2;
 
     public Game() {
         titleScene = new TitleScene(this);
         scene1 = new Scene1(this);
-        scene2 = new Scene2(this);
         initUI();
         loadTitle();
         // loadScene2();
@@ -49,14 +47,16 @@ public class Game extends JFrame  {
         repaint();
     }
 
-    public void loadScene2() {
-        getContentPane().removeAll();
-        add(scene2);
-        if (scene1 != null) {
-            scene1.stop();
-        }
-        scene2.start();
-        revalidate();
-        repaint();
+   public void loadScene2() {
+    getContentPane().removeAll();
+    int playerHealth = scene1.getPlayer().getHealth(); // Get current health from Scene1
+    Scene2 scene2 = new Scene2(this, playerHealth);    // Pass health to Scene2
+    if (scene1 != null) {
+        scene1.stop();
     }
+    add(scene2);
+    scene2.start();
+    revalidate();
+    repaint();
+}
 }

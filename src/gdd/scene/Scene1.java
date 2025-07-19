@@ -99,6 +99,9 @@ public class Scene1 extends JPanel {
         // gameInit();
         loadSpawnDetails();
     }
+    public Player getPlayer() {
+    return player;
+}
 
     private void initAudio() {
         try {

@@ -471,6 +471,7 @@ public class Scene1 extends JPanel {
             return;
         }
 
+        // ...existing code...
         // Check enemy spawn
         SpawnDetails sd = spawnMap.get(frame);
         if (sd != null) {
@@ -500,19 +501,7 @@ public class Scene1 extends JPanel {
             }
         }
 
-        if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
-            inGame = false;
-            timer.stop();
-            message = "Scene 1 Complete! Loading Scene 2...";
-            
-            // Add a small delay before transitioning to Scene2
-            javax.swing.Timer transitionTimer = new javax.swing.Timer(2000, e -> {
-                game.loadScene2();
-            });
-            transitionTimer.setRepeats(false);
-            transitionTimer.start();
-            return;
-        }
+        // ...existing code... (stage only ends at frame 3600)
 
         // player
         player.act();
@@ -581,11 +570,17 @@ public class Scene1 extends JPanel {
                             && shotX <= (enemyX + ALIEN_WIDTH)
                             && shotY >= (enemyY)
                             && shotY <= (enemyY + ALIEN_HEIGHT)) {
-
                         var ii = new ImageIcon(IMG_EXPLOSION);
                         enemy.setImage(ii.getImage());
                         enemy.setDying(true);
                         explosions.add(new Explosion(enemyX, enemyY));
+                        // Play explosion sound
+                        try {
+                            AudioPlayer explosionPlayer = new AudioPlayer("src/audio/explosion.wav");
+                            explosionPlayer.play();
+                        } catch (Exception ex) {
+                            System.err.println("Error playing explosion sound: " + ex.getMessage());
+                        }
                         deaths++;
                         score++; // Increment score when enemy is killed
                         shot.die();
@@ -700,48 +695,100 @@ public class Scene1 extends JPanel {
         public void keyPressed(KeyEvent e) {
             System.out.println("Scene2.keyPressed: " + e.getKeyCode());
 
-            player.keyPressed(e);
-
-            int x = player.getX();
-            int y = player.getY();
-
             int key = e.getKeyCode();
 
+            // Only play shot sound and create shots when SPACE is pressed (not on movement)
             if (key == KeyEvent.VK_SPACE && inGame) {
                 System.out.println("Shots: " + shots.size());
                 if (shots.size() < 8) { // Increased limit for multi-shot
                     int playerCenterX = player.getX() + player.getImage().getWidth(null) / 2;
                     int playerY = player.getY();
-                    
-                    // Create shots based on multi-shot level
                     int multiShotLevel = player.getMultiShotLevel();
-                    
                     switch (multiShotLevel) {
                         case 1:
-                            // Single shot
                             shots.add(new Shot(playerCenterX, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             break;
                         case 2:
-                            // Double shot
                             shots.add(new Shot(playerCenterX - 10, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             shots.add(new Shot(playerCenterX + 10, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             break;
                         case 3:
-                            // Triple shot
                             shots.add(new Shot(playerCenterX - 15, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             shots.add(new Shot(playerCenterX, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             shots.add(new Shot(playerCenterX + 15, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             break;
                         case 4:
-                            // Quad shot
                             shots.add(new Shot(playerCenterX - 20, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             shots.add(new Shot(playerCenterX - 7, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             shots.add(new Shot(playerCenterX + 7, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             shots.add(new Shot(playerCenterX + 20, playerY));
+                            try {
+                                AudioPlayer shotPlayer = new AudioPlayer("src/audio/shot.wav");
+                                shotPlayer.play();
+                            } catch (Exception ex) {
+                                System.err.println("Error playing shot sound: " + ex.getMessage());
+                            }
                             break;
                     }
                 }
             }
+
+            // Now handle movement and other keys
+            player.keyPressed(e);
 
         }
     }

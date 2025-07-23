@@ -90,7 +90,7 @@ public class Scene2 extends JPanel {
 
     private void initAudio() {
         try {
-            String filePath = "src/audio/scene1.wav";
+            String filePath = "src/audio/scene2.wav";
             audioPlayer = new AudioPlayer(filePath);
             audioPlayer.play();
         } catch (Exception e) {
@@ -451,6 +451,16 @@ private void drawBackground(Graphics g) {
                         boss = new Boss(sd.x, sd.y);
                         bossSpawned = true;
                         System.out.println("Boss spawned!");
+                        // Switch to boss fight music
+                        try {
+                            if (audioPlayer != null) {
+                                audioPlayer.stop();
+                            }
+                            audioPlayer = new AudioPlayer("src/audio/boss_fight.wav");
+                            audioPlayer.play();
+                        } catch (Exception e) {
+                            System.err.println("Error switching to boss fight audio: " + e.getMessage());
+                        }
                     }
                     break;
                 case "PowerUp-SpeedUp":

@@ -70,13 +70,15 @@ public class Player extends Sprite {
 
     public void act() {
         x += dx;
+        int playerWidth = getImage().getWidth(null);
+        int AdjustedWidth = playerWidth / 4; 
 
         if (x <= 2) {
             x = 2;
         }
 
-        if (x >= BOARD_WIDTH - 2 * width) {
-            x = BOARD_WIDTH - 2 * width;
+        if (x >= BOARD_WIDTH - AdjustedWidth - BORDER_RIGHT) {
+            x = BOARD_WIDTH - AdjustedWidth - BORDER_RIGHT;
         }
     }
 

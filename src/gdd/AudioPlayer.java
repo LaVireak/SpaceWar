@@ -37,9 +37,6 @@ public class AudioPlayer {
 
         // open audioInputStream to the clip
         clip.open(audioInputStream);
-
-        // Only loop for background music, not for sound effects like shots
-        // clip.loop(Clip.LOOP_CONTINUOUSLY); // <-- COMMENTED OUT, prevents looping for shot sound
     }
 
     public static void main(String[] args) {

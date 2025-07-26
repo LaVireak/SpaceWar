@@ -28,11 +28,13 @@ import java.util.Random;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import gdd.sprite.Bomb;
 
 public class Scene1 extends JPanel {
 
     private int frame = 0;
     private List<PowerUp> powerups;
+    private List<Bomb> bombs = new ArrayList<>();
     private List<Enemy> enemies;
     private List<Explosion> explosions;
     private List<Shot> shots;
@@ -60,8 +62,14 @@ public class Scene1 extends JPanel {
     // TODO load this map from a file
     private int mapOffset = 0;
     private final int[][] MAP = {
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0},
+        {0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+        {0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
+        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+        {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
         {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
@@ -70,8 +78,8 @@ public class Scene1 extends JPanel {
         {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -80,8 +88,8 @@ public class Scene1 extends JPanel {
         {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+        {0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0},
+        {0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
     };
@@ -90,6 +98,7 @@ public class Scene1 extends JPanel {
     private AudioPlayer audioPlayer;
     private int lastRowToShow;
     private int firstRowToShow;
+    private AudioPlayer gameOverAudioPlayer; // Add this field to manage Game Over sound
 
     private int score = 0; // Add this field
 
@@ -376,23 +385,22 @@ public class Scene1 extends JPanel {
         g.setColor(Color.green);
 
         if (inGame) {
-
             drawMap(g);  // Draw background stars first
             drawExplosions(g);
             drawPowreUps(g);
             drawAliens(g);
             drawPlayer(g);
             drawShot(g);
-
+            // Draw bombs
+            for (Bomb bomb : bombs) {
+                bomb.draw(g);
+            }
         } else {
-
             if (timer.isRunning()) {
                 timer.stop();
             }
-
             gameOver(g);
         }
-
         Toolkit.getDefaultToolkit().sync();
     }
 
@@ -436,6 +444,14 @@ public class Scene1 extends JPanel {
     }
 
     private void gameOver(Graphics g) {
+        if (gameOverAudioPlayer == null) {
+            try {
+                gameOverAudioPlayer = new AudioPlayer("src/audio/Game_over.wav");
+                gameOverAudioPlayer.play();
+            } catch (Exception e) {
+                System.err.println("Error playing Game Over sound: " + e.getMessage());
+            }
+        }
 
         g.setColor(Color.black);
         g.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
@@ -455,6 +471,38 @@ public class Scene1 extends JPanel {
     }
 
     private void update() {
+        // --- Bomb spawn logic ---
+        for (Enemy enemy : enemies) {
+            if (enemy.isVisible()) {
+                // Every 120 frames, 10% chance
+                if (frame % 120 == 0) {
+                    if (randomizer.nextInt(100) < 30) {
+                        bombs.add(new Bomb(
+                            enemy.getX() + enemy.getImage().getWidth(null)/2,
+                            enemy.getY() + enemy.getImage().getHeight(null)
+                        ));
+                    }
+                }
+            }
+        }
+
+        // --- Bomb update and collision ---
+        List<Bomb> bombsToRemove = new ArrayList<>();
+        for (Bomb bomb : bombs) {
+            bomb.move();
+            if (!bomb.isVisible()) {
+                bombsToRemove.add(bomb);
+                continue;
+            }
+            // Collision with player
+            if (player.isVisible() && !player.isDying() && bomb.getBounds().intersects(
+                    new java.awt.Rectangle(player.getX(), player.getY(), player.getImage().getWidth(null), player.getImage().getHeight(null)))) {
+                player.takeDamage(1);
+                bombsToRemove.add(bomb);
+                explosions.add(new Explosion(bomb.getX(), bomb.getY()));
+            }
+        }
+        bombs.removeAll(bombsToRemove);
 
         // Win if played for 1 minute (3600 frames at 60 FPS)
         if (frame >= 3600) {

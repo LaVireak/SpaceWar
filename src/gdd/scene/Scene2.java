@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Random;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import gdd.sprite.Bomb;
 
 public class Scene2 extends JPanel {
 
@@ -61,6 +62,7 @@ public class Scene2 extends JPanel {
     private final int[][] backgroundMap = new int[BG_ROWS][BG_COLS];
     private int bgOffset = 0;
     private int initialPlayerHealth = 5;
+    private List<Bomb> bombs = new ArrayList<>();
 
     public Scene2(Game game,int initialPlayerHealth) {
         this.game = game;
@@ -161,6 +163,10 @@ public class Scene2 extends JPanel {
         g.fillRect(0, 0, d.width, d.height);
         drawBackground(g);
         drawDashboard(g);
+        for (Bomb bomb : bombs) {
+
+            bomb.draw(g);
+        }
 
         if (inGame) {
             // Draw game elements
@@ -301,6 +307,15 @@ private void drawBackground(Graphics g) {
         g.setFont(small);
         g.drawString(message, (BOARD_WIDTH - fontMetrics.stringWidth(message)) / 2,
                 BOARD_WIDTH / 2);
+        try {
+            if (audioPlayer != null) {
+                audioPlayer.stop();
+            }
+            audioPlayer = new AudioPlayer("src/audio/Game_over.wav");
+            audioPlayer.play();
+        } catch (Exception e) {
+            System.err.println("Error stopping audio player: " + e.getMessage());
+        }
     }
 
     private void drawEnemies(Graphics g) {
@@ -409,9 +424,38 @@ private void drawBackground(Graphics g) {
             return;
         }
         if (frame % 90 == 0) {
-        int asteroidX = randomizer.nextInt(BOARD_WIDTH - 40) + 20;
-        asteroids.add(new Asteroid(asteroidX, -40));
+    int asteroidX = randomizer.nextInt(BOARD_WIDTH - 40) + 20;
+    asteroids.add(new Asteroid(asteroidX, -40));
+
+            for (Enemy enemy : enemies) {
+                if (!(enemy instanceof Boss) && enemy.isVisible()) {
+                    if (frame % 120 == 0) {
+                    if (randomizer.nextInt(100) < 50) {
+                        bombs.add(new Bomb(
+                            enemy.getX() + enemy.getImage().getWidth(null)/2,
+                            enemy.getY() + enemy.getImage().getHeight(null)
+                        ));
+                    }
+                }
+            }
+        }
+    } 
+    List<Bomb> bombsToRemove = new ArrayList<>();
+    for (Bomb bomb : bombs) {
+        bomb.move();
+        if (!bomb.isVisible()) {
+            bombsToRemove.add(bomb);
+            continue;
+        }
+        // Collision with player
+        if (player.isVisible() && !player.isDying() && bomb.getBounds().intersects(
+                new java.awt.Rectangle(player.getX(), player.getY(), player.getImage().getWidth(null), player.getImage().getHeight(null)))) {
+            player.takeDamage(1);
+            bombsToRemove.add(bomb);
+            explosions.add(new Explosion(bomb.getX(), bomb.getY()));
+        }
     }
+    bombs.removeAll(bombsToRemove);
 
     // Update asteroids
     List<Asteroid> asteroidsToRemove = new ArrayList<>();

@@ -117,7 +117,11 @@ public class Scene2 extends JPanel {
         timer.stop();
         try {
             if (audioPlayer != null) {
-                audioPlayer.stop();
+                try {
+                    audioPlayer.stop();
+                } catch (javax.sound.sampled.UnsupportedAudioFileException | java.io.IOException | javax.sound.sampled.LineUnavailableException ex) {
+                    System.err.println("Error stopping audio player: " + ex.getMessage());
+                }
             }
         } catch (Exception e) {
             System.err.println("Error closing audio player.");
@@ -311,7 +315,11 @@ private void drawBackground(Graphics g) {
             if (audioPlayer != null) {
                 audioPlayer.stop();
             }
-            audioPlayer = new AudioPlayer("src/audio/Game_over.wav");
+            if (bossDefeated){
+                audioPlayer = new AudioPlayer("src/audio/win.wav");
+            } else {
+                audioPlayer = new AudioPlayer("src/audio/Game_over.wav");
+            }
             audioPlayer.play();
         } catch (Exception e) {
             System.err.println("Error stopping audio player: " + e.getMessage());
@@ -421,6 +429,19 @@ private void drawBackground(Graphics g) {
         if (bossDefeated) {
             inGame = false;
             message = "Victory! You defeated the boss!";
+            if (audioPlayer != null) {
+                try {
+                    audioPlayer.stop();
+                } catch (Exception e) {
+                    System.err.println("Error stopping audio player: " + e.getMessage());
+                }
+            }
+            try {
+                audioPlayer = new AudioPlayer("src/audio/win.wav");
+                audioPlayer.play();
+            } catch (Exception e) {
+                System.err.println("Error playing victory sound: " + e.getMessage());
+            }
             return;
         }
         if (frame % 90 == 0) {

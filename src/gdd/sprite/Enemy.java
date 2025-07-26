@@ -42,7 +42,6 @@ public class Enemy extends Sprite {
     public Rectangle getHitBox() {
         return new Rectangle(x, y, getImage().getWidth(null), getImage().getHeight(null));
     }
-    @Override
 public Rectangle getBounds() {
     if (getImage() != null) {
         return new Rectangle(getX(), getY(), getImage().getWidth(null), getImage().getHeight(null));

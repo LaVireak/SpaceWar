@@ -4,6 +4,20 @@ import static gdd.Global.*;
 import javax.swing.ImageIcon;
 
 public class Explosion extends Sprite {
+    // New constructor for custom explosion image (boss multi-frame)
+    public Explosion(int x, int y, String imgPath) {
+        initExplosionCustom(x, y, imgPath);
+    }
+
+    private void initExplosionCustom(int x, int y, String imgPath) {
+        this.x = x;
+        this.y = y;
+        var ii = new ImageIcon(imgPath);
+        var scaledImage = ii.getImage().getScaledInstance(ii.getIconWidth() * SCALE_FACTOR,
+                ii.getIconHeight() * SCALE_FACTOR,
+                java.awt.Image.SCALE_SMOOTH);
+        setImage(scaledImage);
+    }
 
 
     public Explosion(int x, int y) {

@@ -33,6 +33,8 @@ import javax.swing.Timer;
 import gdd.sprite.Bomb;
 
 public class Scene2 extends JPanel {
+    // Add a counter to delay victory message after boss defeat
+    private int bossDefeatFrame = -1;
 
     private int frame = 0;
     private List<PowerUp> powerups;
@@ -425,33 +427,49 @@ private void drawBackground(Graphics g) {
     }
 
     private void update() {
-        // Check for victory condition
+        // Delay victory message and game end for boss explosion animation
         if (bossDefeated) {
-            inGame = false;
-            message = "Victory! You defeated the boss!";
-            if (audioPlayer != null) {
+            if (bossDefeatFrame < 0) {
+                bossDefeatFrame = frame; // Mark the frame when boss was defeated
+                // Play explosion.wav once when boss is defeated
+                if (audioPlayer != null) {
+                    try {
+                        audioPlayer.stop();
+                    } catch (Exception e) {
+                        System.err.println("Error stopping audio player: " + e.getMessage());
+                    }
+                }
                 try {
-                    audioPlayer.stop();
+                    audioPlayer = new AudioPlayer("src/audio/explosion.wav");
+                    audioPlayer.play();
                 } catch (Exception e) {
-                    System.err.println("Error stopping audio player: " + e.getMessage());
+                    System.err.println("Error playing explosion sound: " + e.getMessage());
                 }
             }
-            try {
-                audioPlayer = new AudioPlayer("src/audio/win.wav");
-                audioPlayer.play();
-            } catch (Exception e) {
-                System.err.println("Error playing victory sound: " + e.getMessage());
+            // Wait for 80 frames (~1.3 seconds at 60 FPS) before showing victory
+            if (frame - bossDefeatFrame < 80) {
+                // Let explosions play, do not end game yet
+                return;
+            } else {
+                inGame = false;
+                message = "Victory! You defeated the boss!";
+                try {
+                    audioPlayer = new AudioPlayer("src/audio/win.wav");
+                    audioPlayer.play();
+                } catch (Exception e) {
+                    System.err.println("Error playing victory sound: " + e.getMessage());
+                }
+                return;
             }
-            return;
         }
-        if (frame % 90 == 0) {
+        if (frame % 60 == 0) {
     int asteroidX = randomizer.nextInt(BOARD_WIDTH - 40) + 20;
     asteroids.add(new Asteroid(asteroidX, -40));
 
             for (Enemy enemy : enemies) {
                 if (!(enemy instanceof Boss) && enemy.isVisible()) {
                     if (frame % 120 == 0) {
-                    if (randomizer.nextInt(100) < 50) {
+                    if (randomizer.nextInt(100) < 60) {
                         bombs.add(new Bomb(
                             enemy.getX() + enemy.getImage().getWidth(null)/2,
                             enemy.getY() + enemy.getImage().getHeight(null)
@@ -579,7 +597,12 @@ private void drawBackground(Graphics g) {
         
         if (boss != null && boss.isDying()) {
             bossDefeated = true;
-            explosions.add(new Explosion(boss.getX(), boss.getY()));
+            // Add multi-frame explosion for boss
+            int bossX = boss.getX();
+            int bossY = boss.getY();
+            for (String imgPath : IMG_FINAL_EXPLOSIONS) {
+                explosions.add(new Explosion(bossX, bossY, imgPath));
+            }
             score += 100; // Big score bonus for defeating boss
         }
 

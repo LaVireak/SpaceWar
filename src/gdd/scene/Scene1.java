@@ -474,7 +474,6 @@ public class Scene1 extends JPanel {
         // --- Bomb spawn logic ---
         for (Enemy enemy : enemies) {
             if (enemy.isVisible()) {
-                // Every 120 frames, 10% chance
                 if (frame % 120 == 0) {
                     if (randomizer.nextInt(100) < 30) {
                         bombs.add(new Bomb(

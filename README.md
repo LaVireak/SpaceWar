@@ -10,6 +10,7 @@ SpaceWar ('We are cooked') Game
   - **Audio:** Background music, explosion, shot, and victory/game over sounds.
   - **Score System:** Earn points for defeating enemies and the boss.
   - **Health System:** Player health bar and boss health bar.
+  - **Health Refil:** When the power-ups abilities reached maximum, take again to refil one health bar
 -----
 ## Project Structure
   - `src/gdd/` — Main game logic and entry point

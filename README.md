@@ -25,7 +25,7 @@ SpaceWar ('We are cooked') Game
   - No external libraries required (uses Java Swing and standard audio)
 -----
 ## Credits
-  - Developed by **Vireak La** & **Lamin Oo**
+  - Developed by **Vireak La 6540235** & **Lamin Oo 6540039**
   - Graphics and sounds are for educational/demo purposes.
 -----
 ## References

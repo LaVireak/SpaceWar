@@ -39,17 +39,17 @@ public class Global {
     public static final String IMG_TITLE = "src/images/title.png";
     public static final String IMG_POWERUP_SPEEDUP = "src/images/ability/Speedup_spell.png";
     public static final ArrayList<String> IMG_FINAL_EXPLOSIONS = new ArrayList<>(Arrays.asList(
-        "src/images/Explosion1/explosion2_1.png",
-        "src/images/Explosion1/explosion2_2.png",
-        "src/images/Explosion1/explosion2_3.png",
-        "src/images/Explosion1/explosion2_4.png",
-        "src/images/Explosion1/explosion2_5.png",
-        "src/images/Explosion1/explosion2_6.png",
-        "src/images/Explosion1/explosion2_7.png",
-        "src/images/Explosion1/explosion2_8.png",
-        "src/images/Explosion1/explosion2_9.png",
-        "src/images/Explosion1/explosion2_10.png",
-        "src/images/Explosion1/explosion2_11.png"
+        "src/images/Explosion1/Explosion2_1.png",
+        "src/images/Explosion1/Explosion2_2.png",
+        "src/images/Explosion1/Explosion2_3.png",
+        "src/images/Explosion1/Explosion2_4.png",
+        "src/images/Explosion1/Explosion2_5.png",
+        "src/images/Explosion1/Explosion2_6.png",
+        "src/images/Explosion1/Explosion2_7.png",
+        "src/images/Explosion1/Explosion2_8.png",
+        "src/images/Explosion1/Explosion2_9.png",
+        "src/images/Explosion1/Explosion2_10.png",
+        "src/images/Explosion1/Explosion2_11.png"
 
     ));
     public static final String IMG_BOSS = "src/images/boss.png";

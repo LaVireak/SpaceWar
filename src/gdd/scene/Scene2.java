@@ -12,6 +12,7 @@ import gdd.sprite.Asteroid;
 import gdd.sprite.Boss;
 import gdd.sprite.Enemy;
 import gdd.sprite.Explosion;
+import gdd.sprite.ExplosionBoss;
 import gdd.sprite.Player;
 import gdd.sprite.Shot;
 import java.awt.Color;
@@ -33,8 +34,11 @@ import javax.swing.Timer;
 import gdd.sprite.Bomb;
 
 public class Scene2 extends JPanel {
+    // For slow boss explosion animation
+    private int bossExplosionIndex = 0;
+    private int bossExplosionLastFrame = 0;
     // Add a counter to delay victory message after boss defeat
-    private int bossDefeatFrame = -1;
+
 
     private int frame = 0;
     private List<PowerUp> powerups;
@@ -65,6 +69,7 @@ public class Scene2 extends JPanel {
     private int bgOffset = 0;
     private int initialPlayerHealth = 5;
     private List<Bomb> bombs = new ArrayList<>();
+    private static final int BOSS_EXPLOSION_FRAME_DELAY = 8;
 
     public Scene2(Game game,int initialPlayerHealth) {
         this.game = game;
@@ -80,23 +85,16 @@ public class Scene2 extends JPanel {
         } catch (Exception e) {
             System.err.println("Error loading Scene2 spawn details from CSV: " + e.getMessage());
             // Fallback to hardcoded spawn details
-            loadHardcodedSpawnDetails();
         }
     }
     
-    private void loadHardcodedSpawnDetails() {
-        // Fallback spawn details if CSV loading fails
-        spawnMap.put(50, new SpawnDetails("PowerUp-SpeedUp", 100, 0));
-        spawnMap.put(200, new SpawnDetails("Alien1", 200, 0));
-        spawnMap.put(300, new SpawnDetails("Alien2", 300, 0));
-        spawnMap.put(3000, new SpawnDetails("Boss", 300, 50));
-    }
 
     private void initAudio() {
         try {
             String filePath = "src/audio/scene2.wav";
             audioPlayer = new AudioPlayer(filePath);
-            audioPlayer.play();
+            audioPlayer.loop();
+
         } catch (Exception e) {
             System.err.println("Error initializing audio player: " + e.getMessage());
         }
@@ -153,6 +151,8 @@ public class Scene2 extends JPanel {
         boss = null;
         bossSpawned = false;
         bossDefeated = false;
+        bossExplosionIndex = 0;
+        bossExplosionLastFrame = 0;
         initBackground();
     }
 
@@ -193,7 +193,7 @@ public class Scene2 extends JPanel {
         }
 private void drawBackground(Graphics g) {
     int tileW = BOARD_WIDTH / BG_COLS;
-    int tileH = BOARD_HEIGHT / (BG_ROWS - 8); // -8 to make stars bigger
+    int tileH = BOARD_HEIGHT / (BG_ROWS - 8); 
 
     for (int row = 0; row < BG_ROWS; row++) {
         for (int col = 0; col < BG_COLS; col++) {
@@ -429,46 +429,61 @@ private void drawBackground(Graphics g) {
     private void update() {
         // Delay victory message and game end for boss explosion animation
         if (bossDefeated) {
-            if (bossDefeatFrame < 0) {
-                bossDefeatFrame = frame; // Mark the frame when boss was defeated
-                // Play explosion.wav once when boss is defeated
-                if (audioPlayer != null) {
+        
+        // 1. Is the multi-frame explosion animation still playing?
+            if (bossExplosionIndex < IMG_FINAL_EXPLOSIONS.size()) {
+            
+                if ((frame - bossExplosionLastFrame) >= BOSS_EXPLOSION_FRAME_DELAY) {
+                    String imgPath = IMG_FINAL_EXPLOSIONS.get(bossExplosionIndex);
+                    ExplosionBoss tempExplosion = new ExplosionBoss(0, 0, imgPath);
+                    int explosionWidth = tempExplosion.getImage().getWidth(null);
+                    int explosionHeight = tempExplosion.getImage().getHeight(null);
+
+
+                    int bossCenterX = boss.getX() - boss.getImage().getWidth(null) / 2;
+                    int bossCenterY = boss.getY() - boss.getImage().getHeight(null) / 2;
+                    int explosionX = bossCenterX - (explosionWidth / 2);
+                    int explosionY = bossCenterY - (explosionHeight / 2);
+                    explosions.add(new ExplosionBoss(explosionX, explosionY, imgPath));
+                
+                    bossExplosionIndex++;
+                    bossExplosionLastFrame = frame; 
+                }
+            
+            } else {
+                if (inGame) {
+                    inGame = false;
+                    message = "Victory! You defeated the boss!";
+                
+                // Play final victory sound
                     try {
-                        audioPlayer.stop();
+                        if (audioPlayer != null) audioPlayer.stop();
+                        audioPlayer = new AudioPlayer("src/audio/win.wav");
+                        audioPlayer.play();
                     } catch (Exception e) {
-                        System.err.println("Error stopping audio player: " + e.getMessage());
+                        System.err.println("Error playing victory sound: " + e.getMessage());
                     }
                 }
-                try {
-                    audioPlayer = new AudioPlayer("src/audio/explosion.wav");
-                    audioPlayer.play();
-                } catch (Exception e) {
-                    System.err.println("Error playing explosion sound: " + e.getMessage());
-                }
             }
-            // Wait for 80 frames (~1.3 seconds at 60 FPS) before showing victory
-            if (frame - bossDefeatFrame < 80) {
-                // Let explosions play, do not end game yet
-                return;
-            } else {
-                inGame = false;
-                message = "Victory! You defeated the boss!";
-                try {
-                    audioPlayer = new AudioPlayer("src/audio/win.wav");
-                    audioPlayer.play();
-                } catch (Exception e) {
-                    System.err.println("Error playing victory sound: " + e.getMessage());
-                }
-                return;
-            }
-        }
+        return;
+    }
+    // Increment frame count}
         if (frame % 60 == 0) {
     int asteroidX = randomizer.nextInt(BOARD_WIDTH - 40) + 20;
     asteroids.add(new Asteroid(asteroidX, -40));
+    int bombInterval = 120;
+    if (frame >= 2400) {
+        bombInterval = 30;
+    } else if (frame >= 3600) {
+        bombInterval = 20;
+    }
+    else if (frame >= 1200) {
+        bombInterval = 60;
+    } 
 
             for (Enemy enemy : enemies) {
                 if (!(enemy instanceof Boss) && enemy.isVisible()) {
-                    if (frame % 120 == 0) {
+                    if (frame % bombInterval == 0) {
                     if (randomizer.nextInt(100) < 60) {
                         bombs.add(new Bomb(
                             enemy.getX() + enemy.getImage().getWidth(null)/2,
@@ -580,30 +595,52 @@ private void drawBackground(Graphics g) {
         }
         enemies.removeAll(enemiesToRemove);
 
-        // Update boss
+
         if (boss != null && boss.isVisible()) {
             boss.act(1);
-            
-            // Check collision with player
+
             if (player.isVisible() && !player.isDying() && boss.collidesWith(player)) {
-                player.takeDamage(2); // Boss does more damage
+                player.takeDamage(2);
                 explosions.add(new Explosion(player.getX(), player.getY()));
             }
-            
-            // Update boss shots
+
             bossShots.addAll(boss.getBossShots());
             boss.clearBossShots();
         }
         
         if (boss != null && boss.isDying()) {
             bossDefeated = true;
-            // Add multi-frame explosion for boss
+            if (boss.isVisible()) {
+                boss.setVisible(false);
+                score += 100; // Give score bonus once.
+            }
+            try{
+                if (audioPlayer != null) {
+                    audioPlayer.stop();
+                }
+                audioPlayer = new AudioPlayer("src/audio/explosion.wav");
+                audioPlayer.play();
+            } catch (Exception e) {
+                System.err.println("Error playing boss defeated sound: " + e.getMessage());
+            }
+            
+
             int bossX = boss.getX();
             int bossY = boss.getY();
-            for (String imgPath : IMG_FINAL_EXPLOSIONS) {
-                explosions.add(new Explosion(bossX, bossY, imgPath));
+            int explosionDelay = 30; // 30 frames per explosion image
+            // Show all explosion images in sequence, keep boss visible until done
+            if (bossExplosionIndex < IMG_FINAL_EXPLOSIONS.size()) {
+                if ((frame - bossExplosionLastFrame) >= explosionDelay) {
+                    String imgPath = IMG_FINAL_EXPLOSIONS.get(bossExplosionIndex);
+                    explosions.add(new ExplosionBoss(bossX, bossY, imgPath));
+                    bossExplosionIndex++;
+                    bossExplosionLastFrame = frame;
+                }
+                // Keep boss visible until all explosions are shown
+                boss.setVisible(true);
+            } else if (bossExplosionIndex == IMG_FINAL_EXPLOSIONS.size()) {
+                bossExplosionIndex++; // Prevent repeat
             }
-            score += 100; // Big score bonus for defeating boss
         }
 
         // Update shots

@@ -36,7 +36,9 @@ public class SpeedUp extends PowerUp {
             System.out.println("Speed upgraded to level " + (currentLevel + 1));
         } else {
             // Give score bonus if already at max level
-            System.out.println("Speed already at max level!");
+            int newHealth = Math.min(player.getHealth() + 1, 5);
+            player.setHealth(newHealth);
+            System.out.println("Speed already at max level and filled one health!");
         }
         
         // Remove the power-up

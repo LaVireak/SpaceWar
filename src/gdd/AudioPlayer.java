@@ -170,5 +170,11 @@ public class AudioPlayer {
         clip.open(audioInputStream);
         // clip.loop(Clip.LOOP_CONTINUOUSLY); // <-- COMMENTED OUT, prevents looping for shot sound
     }
+    // Method to loop the audio continuously
+    public void loop() {
+    // Set the clip to loop forever and start it
+        clip.loop(Clip.LOOP_CONTINUOUSLY);
+        status = "play";
+    }
 
 }

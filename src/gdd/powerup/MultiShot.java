@@ -35,10 +35,13 @@ public class MultiShot extends PowerUp {
         if (currentLevel < 4) {
             player.setMultiShotLevel(currentLevel + 1);
             System.out.println("Multi-shot upgraded to level " + (currentLevel + 1));
+            
         } else {
+            int newHealth = Math.min(player.getHealth() + 1, 5);
+            player.setHealth(newHealth);
             // Give score bonus if already at max level
             // This would require adding score to player or passing it differently
-            System.out.println("Multi-shot already at max level!");
+            System.out.println("Multi-shot already at max level and filled one health!");
         }
         
         // Remove the power-up

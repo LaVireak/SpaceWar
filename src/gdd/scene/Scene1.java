@@ -116,7 +116,7 @@ public class Scene1 extends JPanel {
         try {
             String filePath = "src/audio/scene1.wav";
             audioPlayer = new AudioPlayer(filePath);
-            audioPlayer.play();
+            audioPlayer.loop();
         } catch (Exception e) {
             System.err.println("Error initializing audio player: " + e.getMessage());
         }
@@ -472,9 +472,17 @@ public class Scene1 extends JPanel {
 
     private void update() {
         // --- Bomb spawn logic ---
+        int bombInterval=120;
+        if (frame >=2400)  {
+            bombInterval = 30;
+        }else if (frame >= 1200) {
+            bombInterval = 60; 
+        }else if (frame >= 3600) {
+            bombInterval = 20; 
+        } 
         for (Enemy enemy : enemies) {
             if (enemy.isVisible()) {
-                if (frame % 120 == 0) {
+                if (frame % bombInterval == 0) {
                     if (randomizer.nextInt(100) < 30) {
                         bombs.add(new Bomb(
                             enemy.getX() + enemy.getImage().getWidth(null)/2,
@@ -504,7 +512,7 @@ public class Scene1 extends JPanel {
         bombs.removeAll(bombsToRemove);
 
         // Win if played for 1 minute (3600 frames at 60 FPS)
-        if (frame >= 3600) {
+        if (frame >= 7200) {
             inGame = false;
             timer.stop();
             message = "Scene 1 Complete! Loading Scene 2...";
